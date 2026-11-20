@@ -10,7 +10,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Abrir o zip
-        run: unzip -o "vida_em_dia.zip"
+        run: unzip -o ./*.zip
 
       - uses: actions/setup-java@v4
         with:
@@ -24,20 +24,22 @@ jobs:
       - name: Criar a parte Android
         working-directory: vida_em_dia
         run: |
-          flutter create --platforms=android --org com.vidaemdia --project-name vida_em_dia "$RUNNER_TEMP/base"
+          flutter create --platforms=android --org com.alvovita --project-name alvo_vita "$RUNNER_TEMP/base"
           cp -r "$RUNNER_TEMP/base/android" ./android
 
-      - name: Adicionar permissoes de GPS
+      - name: Nome do app e permissoes
         working-directory: vida_em_dia
         run: |
-          python3 - <<'EOF'
+          python3 - <<'PYEOF'
+          import re
           p = 'android/app/src/main/AndroidManifest.xml'
           s = open(p, encoding='utf-8').read()
-          nomes = ['ACCESS_FINE_LOCATION', 'ACCESS_COARSE_LOCATION', 'FOREGROUND_SERVICE', 'FOREGROUND_SERVICE_LOCATION', 'POST_NOTIFICATIONS', 'WAKE_LOCK']
+          s = re.sub(r'android:label="[^"]*"', 'android:label="Alvo Vita"', s, count=1)
+          nomes = ['ACCESS_FINE_LOCATION', 'ACCESS_COARSE_LOCATION', 'FOREGROUND_SERVICE', 'FOREGROUND_SERVICE_LOCATION', 'POST_NOTIFICATIONS', 'WAKE_LOCK', 'INTERNET']
           perms = ''.join('    <uses-permission android:name="android.permission.' + n + '"/>\n' for n in nomes)
           s = s.replace('<application', perms + '    <application', 1)
           open(p, 'w', encoding='utf-8').write(s)
-          EOF
+          PYEOF
 
       - name: Baixar dependencias
         working-directory: vida_em_dia
@@ -50,5 +52,5 @@ jobs:
       - name: Guardar o APK
         uses: actions/upload-artifact@v4
         with:
-          name: vida-em-dia-apk
+          name: alvo-vita-apk
           path: vida_em_dia/build/app/outputs/flutter-apk/app-debug.apk
