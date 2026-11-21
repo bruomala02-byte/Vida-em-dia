@@ -1,0 +1,47 @@
+name: Gerar APK
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Abrir o zip
+        run: unzip -o ./*.zip
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Criar a parte Android
+        working-directory: vida_em_dia
+        run: |
+          flutter create --platforms=android --org com.alvovita --project-name alvo_vita "$RUNNER_TEMP/base"
+          cp -r "$RUNNER_TEMP/base/android" ./android
+
+      - name: Nome do app e permissoes
+        working-directory: vida_em_dia
+        run: python3 tools/ajustar_android.py
+
+      - name: Baixar dependencias
+        working-directory: vida_em_dia
+        run: flutter pub get
+
+      - name: Gerar o APK
+        working-directory: vida_em_dia
+        run: flutter build apk --debug
+
+      - name: Guardar o APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: alvo-vita-apk
+          path: vida_em_dia/build/app/outputs/flutter-apk/app-debug.apk
+        
